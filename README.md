@@ -25,6 +25,15 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
+## 环境要求  |  Requirements & Dependencies
+
+- Windows 7 及以上操作系统
+- X Studio · 歌手 2.0.0 及以上版本
+- Python 3（除 3.7.6 和 3.8.1 外）
+- 第三方模块：pywin32, comtypes, typing, uiautomation, colorlog
+
+
+
 ## 使用方法  |  How to Use
 
 发行版中包含若干个 demo，安装好所需依赖后即可运行 main.py 查看效果。
@@ -34,15 +43,6 @@ UI 自动化执行的成功与否受到系统流畅度等客观因素影响。�
 模块中定义的函数可供外部调用，可自由组合或添加其他操作（详见代码注释与参考资料）。若需借助本工程实现自定义的自动化流程，需将 src 文件夹复制到自己的项目中，随后可以 import 使用。
 
 不会编程或需要定制自动化流程？在本仓库提交 issue，或[联系作者](https://space.bilibili.com/102844209)。
-
-
-
-## 环境要求  |  Requirements & Dependencies
-
-- Windows 7 及以上操作系统
-- X Studio · 歌手 2.0.0 及以上版本
-- Python 3（除 3.7.6 和 3.8.1 外）
-- 第三方模块：pywin32, comtypes, typing, uiautomation, colorlog
 
 
 
