@@ -4,7 +4,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
-### 项目简介与功能说明  |  Introduction & Features
+## 项目简介与功能说明  |  Introduction & Features
 
 本项目基于 [Python-UIAutomation-for-Windows](https://github.com/yinkaisheng/Python-UIAutomation-for-Windows) 开发，用于自动控制 X Studio · 歌手软件完成若干常用操作。
 
@@ -23,7 +23,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
-### 使用方法  |  Usage
+## 使用方法  |  Usage
 
 模块中定义的函数可供外部调用，可自由组合或添加其他操作（详见参考资料）。每个版本均带有一个典型的实用 Demo，稍加改动即可立即运行。
 
@@ -31,7 +31,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
-### 环境要求  |  Requirements & Dependencies
+## 环境要求  |  Requirements & Dependencies
 
 - Windows 7 及以上操作系统
 - X Studio 2.0.0 及以上版本
@@ -40,7 +40,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
-### 更新日志   |  Update Log
+## 更新日志   |  Update Log
 
 #### 1.0.0 （2021.03.04)
 
@@ -50,7 +50,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
-### 参考资料与相关链接  |  References & Links
+## 参考资料与相关链接  |  References & Links
 
 - [Python-UIAutomation-for-Windows](https://github.com/yinkaisheng/Python-UIAutomation-for-Windows)
 - [UI Automation - Win32 apps | Microsoft Docs](https://docs.microsoft.com/en-us/windows/win32/winauto/entry-uiauto-win32)
