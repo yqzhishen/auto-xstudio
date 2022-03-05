@@ -1,10 +1,14 @@
 # UI AUTOMATION FOR X STUDIO
 # AUTHOR: YQ之神
-# VERSION: 1.0.0 (2022.3.4)
+# VERSION: 1.1.0 (2022.3.5)
 
 import logging
 import os
+import time
 import winreg
+
+import win32api
+import win32con
 
 import uiautomation as auto
 
@@ -38,8 +42,8 @@ def _verify_startup():
     """
     验证 X Studio 是否成功启动。
     """
-    warning_window = auto.WindowControl(searchDepth=1, Name='提示', maxSearchSeconds=3)
-    if warning_window.Exists():
+    warning_window = auto.WindowControl(searchDepth=1, Name='提示')
+    if warning_window.Exists(maxSearchSeconds=3):
         warning = warning_window.TextControl(searchDepth=1, AutomationId='Tbx').Name
         warning_window.ButtonControl(searchDepth=1, AutomationId='OkBtn').Click(simulateMove=False)
         logger.error(warning)
@@ -50,14 +54,14 @@ def _verify_opening(base):
     """
     验证工程是否成功打开。
     """
-    warning_window = base.WindowControl(searchDepth=1, ClassName='#32770', maxSearchSeconds=1)
-    if warning_window.Exists():
+    warning_window = base.WindowControl(searchDepth=1, ClassName='#32770')
+    if warning_window.Exists(maxSearchSeconds=1):
         warning = warning_window.TextControl(searchDepth=2).Name.replace('\r\n', ' ').replace('。 ', '。')
         if warning.startswith('无法读取伴奏文件'):
             logger.warning('已自动忽略：无法读取伴奏文件。')
-            while warning_window.Exists():
+            while warning_window.Exists(maxSearchSeconds=1):
                 warning_window.ButtonControl(searchDepth=1, Name='确定').Click(simulateMove=False)
-                warning_window = auto.WindowControl(searchDepth=2, ClassName='#32770', maxSearchSeconds=1)
+                warning_window = auto.WindowControl(searchDepth=2, ClassName='#32770')
         elif '正在使用' in warning:
             warning_window.ButtonControl(searchDepth=2, Name='确定').Click(simulateMove=False)
             base.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
@@ -71,6 +75,29 @@ def _verify_opening(base):
             exit(1)
 
 
+def _verify_updates():
+    """
+    验证 X Studio 更新，并关闭更新提示窗。
+    """
+    update_window = auto.WindowControl(searchDepth=2, Name='检测到新版本')
+    if update_window.Exists(maxSearchSeconds=3):
+        update_window.ButtonControl(searchDepth=1, AutomationId='btnClose').Click(simulateMove=False)
+
+
+def _key_down(code: int):
+    win32api.keybd_event(code, win32api.MapVirtualKey(code, 0), 0, 0)
+
+
+def _key_up(code: int):
+    win32api.keybd_event(code, win32api.MapVirtualKey(code, 0), win32con.KEYEVENTF_KEYUP, 0)
+
+
+def _key_press(code: int):
+    _key_down(code)
+    time.sleep(0.02)
+    _key_up(code)
+
+
 def find_xstudio() -> str:
     """
     根据注册表查找 X Studio 主程序路径。
@@ -81,31 +108,48 @@ def find_xstudio() -> str:
     return value[0].split('"')[1]
 
 
-def start_xstudio(project: str = None):
+def start_xstudio(engine: str = None, project: str = None, singer: str = '陈水若'):
     """
     启动 X Studio。
+    :param engine: 手动指定 X Studio 主程序路径
     :param project: 启动时需要打开的工程文件路径，默认打开空白工程
+    :param singer: 若打开空白工程，可指定初始歌手名称
     """
+    if engine:
+        engine = os.path.abspath(engine)
+        if not os.path.exists(engine):
+            logger.error('指定的主程序路径不存在。')
+            exit(1)
+        if not os.path.isfile(engine) or not engine.endswith('.exe'):
+            logger.error('指定的主程序不是合法的可执行 (.exe) 文件。')
+            exit(1)
+        logger.info('指定的主程序：%s。' % engine)
     if project:
+        project = os.path.abspath(project)
         if not os.path.exists(project):
-            logger.error('文件不存在。')
+            logger.error('工程文件不存在。')
             exit(1)
-        if not project.endswith('.svip'):
-            logger.error('不是一个可打开的 X Studio 工程 (.svip) 文件。')
+        if not os.path.isfile(project) or not project.endswith('.svip'):
+            logger.error('不是合法的 X Studio 工程 (.svip) 文件。')
             exit(1)
-        os.startfile(project.replace('/', '\\'))
+        if engine:
+            os.popen(f'"{engine}" "{project}"')
+        else:
+            os.popen(f'"{project}"')
         _verify_startup()
         _verify_opening(auto)
         logger.info('启动 X Studio 并打开工程：%s。' % project)
+        _verify_updates()
     else:
-        os.startfile(find_xstudio())
+        if engine:
+            os.popen(f'"{engine}"')
+        else:
+            os.popen(f'"{find_xstudio()}"')
         _verify_startup()
         auto.WindowControl(searchDepth=1, Name='X Studio').TextControl(searchDepth=2, Name='开始创作').Click(simulateMove=False)
-        singer_market = auto.WindowControl(searchDepth=2, Name='歌手市场')
-        singer_market.HyperlinkControl(searchDepth=9, Name='全部歌手').Click(simulateMove=False)
-        singer_market.TextControl(searchDepth=16, Name='陈水若').Click(simulateMove=False)
-        singer_market.ButtonControl(searchDepth=17, Name='选中').Click(simulateMove=False)
-        logger.info('启动 X Studio 并创建空白工程。')
+        choose_singer(name=singer)
+        logger.info('启动 X Studio 并创建空白工程，初始歌手：%s。' % singer)
+        _verify_updates()
 
 
 def quit_xstudio():
@@ -122,15 +166,24 @@ def quit_xstudio():
     logger.info('退出 X Studio。')
 
 
-def new_project():
+def new_project(singer: str = None):
     """
     新建工程。X Studio 必须已处于启动状态。
+    :param singer: 可指定新工程的初始歌手
     """
-    main_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*')
-    main_window.MenuItemControl(searchDepth=2, Name='菜单').Click(simulateMove=False)
-    main_window.MenuItemControl(searchDepth=3, Name='文件').Click(simulateMove=False)
-    main_window.MenuItemControl(searchDepth=4, Name='新建工程').Click(simulateMove=False)
-    logger.info('创建新工程。')
+    _key_down(17)
+    _key_press(78)
+    _key_up(17)
+    confirm_window = auto.WindowControl(searchDepth=1, Name='X Studio')
+    if confirm_window.Exists(maxSearchSeconds=1):
+        confirm_window.ButtonControl(searchDepth=1, AutomationId='NoBtn').Click(simulateMove=False)
+    if singer:
+        track_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*').CustomControl(searchDepth=1, ClassName='TrackWin')
+        track_window.CustomControl(searchDepth=2, ClassName='TrackChannelControlPanel').ButtonControl(searchDepth=2, AutomationId='switchSingerButton').DoubleClick(simulateMove=False)
+        choose_singer(singer)
+        logger.info('创建新工程，初始歌手：%s。' % singer)
+    else:
+        logger.info('创建新工程。')
 
 
 def open_project(filename: str, folder: str = None):
@@ -142,20 +195,30 @@ def open_project(filename: str, folder: str = None):
     if folder:
         project = os.path.abspath(os.path.join(folder, filename))
         if not os.path.exists(project):
-            logger.error('文件不存在。')
+            logger.error('工程文件不存在。')
             exit(1)
     else:
         project = filename
     if not filename.endswith('.svip'):
         logger.error('不是一个可打开的 X Studio 工程 (.svip) 文件。')
         exit(1)
+    _key_down(17)
+    _key_press(79)
+    _key_up(17)
+    confirm_window = auto.WindowControl(searchDepth=1, Name='X Studio')
+    if confirm_window.Exists(maxSearchSeconds=1):
+        confirm_window.ButtonControl(searchDepth=1, AutomationId='NoBtn').Click(simulateMove=False)
     main_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*')
-    main_window.MenuItemControl(searchDepth=2, Name='菜单').Click(simulateMove=False)
-    main_window.MenuItemControl(searchDepth=3, Name='文件').Click(simulateMove=False)
-    main_window.MenuItemControl(searchDepth=4, Name='打开工程').Click(simulateMove=False)
     open_window = main_window.WindowControl(searchDepth=1, Name='打开文件')
     open_window.EditControl(searchDepth=3, Name='文件名(N):').GetValuePattern().SetValue(project)
     open_window.ButtonControl(searchDepth=1, Name='打开(O)').Click(simulateMove=False)
+    warning_window = open_window.WindowControl(searchDepth=1, ClassName='#32770')
+    if warning_window.Exists(maxSearchSeconds=1):
+        warning = warning_window.TextControl(searchDepth=2).Name
+        warning_window.ButtonControl(searchDepth=2, Name='确定').Click(simulateMove=False)
+        open_window.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
+        logger.error(warning.replace('\r\n', ' ').replace('。 ', '。'))
+        exit(1)
     _verify_opening(main_window)
     logger.info('打开工程：%s。' % project)
 
@@ -201,8 +264,8 @@ def export_project(title: str = None, folder: str = None, format: str = 'mp3', s
     export_window = auto.WindowControl(searchDepth=2, RegexName='导出.*')
     label = export_window.TextControl(searchDepth=1, ClassName='TextBlock', AutomationId='label')
     while True:
-        message_window = auto.WindowControl(searchDepth=2, ClassName='#32770', maxSearchSeconds=0.5)
-        if message_window.Exists():
+        message_window = auto.WindowControl(searchDepth=2, ClassName='#32770')
+        if message_window.Exists(maxSearchSeconds=1):
             message = message_window.TextControl(searchDepth=1, ClassName='Static').Name
             message_window.ButtonControl(searchDepth=1, Name='确定').Click(simulateMove=False)
             logger.error(message + '。')
@@ -213,7 +276,7 @@ def export_project(title: str = None, folder: str = None, format: str = 'mp3', s
             logger.error('导出失败，请稍后再试。')
             exit(1)
     export_window.ButtonControl(searchDepth=1, AutomationId='okBtn').Click(simulateMove=False)
-    logger.info('导出工程：%s, %s 格式, 采样率 %d Hz。' % (title, format, samplerate))
+    logger.info('导出工程：%s, 格式 %s, 采样率 %d Hz。' % (title, format, samplerate))
 
 
 def save_project(filename: str = None, folder: str = None):
@@ -229,23 +292,26 @@ def save_project(filename: str = None, folder: str = None):
         if not os.path.exists(folder):
             os.makedirs(folder)
         folder = os.path.abspath(folder.replace('/', '\\'))
-    main_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*')
-    main_window.MenuItemControl(searchDepth=2, Name='菜单').Click(simulateMove=False)
-    main_window.MenuItemControl(searchDepth=3, Name='文件').Click(simulateMove=False)
     if not filename:
-        main_window.MenuItemControl(searchDepth=4, Name='保存工程').Click(simulateMove=False)
+        _key_down(17)
+        _key_press(83)
+        _key_up(17)
         logger.info('保存工程。')
     else:
         if folder:
             project = os.path.join(folder, filename)
         else:
             project = filename
-        main_window.MenuItemControl(searchDepth=4, Name='工程另存为').Click(simulateMove=False)
-        save_window = main_window.WindowControl(searchDepth=1, Name='另存为')
+        _key_down(17)
+        _key_down(16)
+        _key_press(83)
+        _key_up(16)
+        _key_up(17)
+        save_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*').WindowControl(searchDepth=1, Name='另存为')
         save_window.EditControl(searchDepth=6, Name='文件名:').GetValuePattern().SetValue(project)
         save_window.ButtonControl(searchDepth=1, Name='保存(S)').Click(simulateMove=False)
-        confirm_window = save_window.WindowControl(searchDepth=1, ClassName='#32770', maxSearchSeconds=1)
-        if confirm_window.Exists():
+        confirm_window = save_window.WindowControl(searchDepth=1, ClassName='#32770')
+        if confirm_window.Exists(maxSearchSeconds=1):
             warning = confirm_window.TextControl(searchDepth=2).Name
             if warning.endswith('是否替换它?'):
                 confirm_window.ButtonControl(searchDepth=1, Name='是(Y)').Click(simulateMove=False)
@@ -254,25 +320,76 @@ def save_project(filename: str = None, folder: str = None):
                 save_window.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
                 logger.error(warning.replace('\r\n', ' ').replace('。 ', '。'))
                 exit(1)
-        logger.info('另存为工程。')
+        logger.info('另存为工程：%s。' % project)
+
+
+def choose_singer(name: str):
+    """
+    选择一名歌手。歌手市场必须处于打开状态。
+    :param name: 歌手名字
+    """
+    singer_market = auto.WindowControl(searchDepth=2, Name='歌手市场')
+    singer_market.HyperlinkControl(searchDepth=9, Name='全部歌手').Click(simulateMove=False)
+    browser_pane = singer_market.PaneControl(searchDepth=3, ClassName='CefBrowserWindow')
+    bottom = browser_pane.BoundingRectangle.bottom
+    while True:
+        singer_text = browser_pane.TextControl(searchDepth=14, Name=name)
+        bottom_text = browser_pane.TextControl(searchDepth=14, Name='已经到底了')
+        if singer_text.Exists(maxSearchSeconds=0.5) and 0 < singer_text.BoundingRectangle.bottom < bottom:
+            singer_text.Click(simulateMove=False)
+            break
+        elif bottom_text.Exists(maxSearchSeconds=0.5) and bottom_text.BoundingRectangle.bottom > 0:
+            singer_market.ButtonControl(searchDepth=1, AutomationId='btnClose').Click(simulateMove=False)
+            logger.error('指定的歌手“%s”不存在。' % name)
+            exit(1)
+        else:
+            browser_pane.MoveCursorToMyCenter(simulateMove=False)
+            win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, -1500)
+            time.sleep(1)
+    if singer_market.ButtonControl(searchDepth=17, Name='待解锁').Exists(maxSearchSeconds=0.5):
+        singer_market.ImageControl(Depth=17).Click(simulateMove=False)
+        logger.error('指定的歌手“%s”未解锁。' % name)
+        exit(1)
+    singer_market.ButtonControl(searchDepth=17, Name='选中').Click(simulateMove=False)
+
+
+def switch_singer(name: str, track: int = 1):
+    """
+    为指定的轨道切换歌手。
+    :param track: 目标演唱轨序号（即工程中的第几条轨道），从 1 开始，默认为 1
+    :param name: 歌手名字
+    """
+    if track < 1:
+        logger.error('轨道编号最小为 1。')
+        exit(1)
+    track_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*').CustomControl(searchDepth=1, ClassName='TrackWin')
+    channel_pane = track_window.CustomControl(searchDepth=2, foundIndex=track, ClassName='TrackChannelControlPanel')
+    if not channel_pane.Exists(maxSearchSeconds=2):
+        logger.error('未找到对应序号的轨道。')
+        exit(1)
+    if channel_pane.ComboBoxControl(searchDepth=1, ClassName='ComboBox').IsOffscreen:
+        logger.error('指定的轨道不是演唱轨。')
+        exit(1)
+    bottom = track_window.PaneControl(searchDepth=1, ClassName='ScrollViewer').BoundingRectangle.bottom
+    switch_button = channel_pane.ButtonControl(searchDepth=2, AutomationId='switchSingerButton')
+    while True:
+        if switch_button.BoundingRectangle.bottom < bottom:
+            switch_button.DoubleClick(simulateMove=False)
+            break
+        else:
+            track_window.MoveCursorToMyCenter(simulateMove=False)
+            win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, -500)
+    choose_singer(name=name)
 
 
 if __name__ == '__main__':
     _init()
-    # demo: 导出某文件夹下所有的工程
-    path = r'PATH_TO_PROJECTS'
-    filelist = []
-    for name in os.listdir(path):
-        if os.path.isfile(os.path.join(path, name)) and name.endswith('.svip'):
-            filelist.append(name)
-    num = len(filelist)
-    if num > 0:
-        start_xstudio(os.path.join(path, filelist[0]))
-        export_project(format='wav', samplerate=48000)
-        if num > 1:
-            open_project(filename=filelist[1], folder=path)
-            export_project(format='wav', samplerate=48000)
-            for file in filelist[2:]:
-                open_project(filename=file)
-                export_project(format='wav', samplerate=48000)
-        quit_xstudio()
+    # demo: 导出同一个工程文件的不同歌手演唱音频（公测版歌手不全无法使用，目前仅可运行在 2.0.0 beta2 版本上）
+    singers = ['陈水若', '方念', '果妹', '小傻']  # 需要导出的所有歌手
+    path = r'PATH_TO_PROJECT'  # 工程文件存放路径
+    prefix = '示例'  # 各歌手演唱音频的公共前缀。本例中保存为“示例 - 陈水若.mp3”，“示例 - 方念.mp3”等
+    start_xstudio(engine=r'E:\YQ数据空间\YQ实验室\实验室：XStudioSinger\内测\XStudioSinger_2.0.0_beta2.exe', project=path)
+    for s in singers:
+        switch_singer(track=1, name=s)
+        export_project(title=f'{prefix} - {s}')
+    quit_xstudio()

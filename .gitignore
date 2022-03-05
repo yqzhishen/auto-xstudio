@@ -137,3 +137,5 @@ dmypy.json
 *.mp3
 *.mid
 *.svip
+@*
+GPUCache/
