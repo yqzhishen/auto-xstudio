@@ -130,3 +130,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Others
+/automation.py
+*.wav
+*.mp3
+*.mid
+*.svip

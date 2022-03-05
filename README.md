@@ -42,7 +42,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 ## 更新日志   |  Update Log
 
-#### 1.0.0 （2021.03.04)
+#### 1.0.0 (2022.03.04)
 
 > - 启动和退出 X Studio
 > - 新建、打开、保存、导出工程
