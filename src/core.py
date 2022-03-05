@@ -11,31 +11,29 @@ import win32api
 import win32con
 
 import uiautomation as auto
+import colorlog
+
 
 logger = logging.getLogger()
-
-
-def _init():
-    import colorlog
-    log_colors_config = {
-        'DEBUG': 'white',
-        'INFO': 'green',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'bold_red',
-    }
-    console_handler = logging.StreamHandler()
-    logger.setLevel(logging.INFO)
-    console_handler.setLevel(logging.INFO)
-    console_formatter = colorlog.ColoredFormatter(
-        fmt='%(log_color)s[%(asctime)s.%(msecs)03d] %(filename)s -> %(funcName)s line:%(lineno)d [%(levelname)s] : %(message)s',
-        datefmt='%Y-%m-%d  %H:%M:%S',
-        log_colors=log_colors_config
-    )
-    console_handler.setFormatter(console_formatter)
-    if not logger.handlers:
-        logger.addHandler(console_handler)
-    console_handler.close()
+log_colors_config = {
+    'DEBUG': 'white',
+    'INFO': 'green',
+    'WARNING': 'yellow',
+    'ERROR': 'red',
+    'CRITICAL': 'bold_red',
+}
+console_handler = logging.StreamHandler()
+logger.setLevel(logging.INFO)
+console_handler.setLevel(logging.INFO)
+console_formatter = colorlog.ColoredFormatter(
+    fmt='%(log_color)s[%(asctime)s.%(msecs)03d] %(filename)s -> %(funcName)s line:%(lineno)d [%(levelname)s] : %(message)s',
+    datefmt='%Y-%m-%d  %H:%M:%S',
+    log_colors=log_colors_config
+)
+console_handler.setFormatter(console_formatter)
+if not logger.handlers:
+    logger.addHandler(console_handler)
+console_handler.close()
 
 
 def _verify_startup():
@@ -383,7 +381,6 @@ def switch_singer(name: str, track: int = 1):
 
 
 if __name__ == '__main__':
-    _init()
     # demo: 导出同一个工程文件的不同歌手演唱音频（公测版歌手不全无法使用，目前仅可运行在 2.0.0 beta2 版本上）
     singers = ['陈水若', '方念', '果妹', '小傻']  # 需要导出的所有歌手
     path = r'PATH_TO_PROJECT'  # 工程文件存放路径
