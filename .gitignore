@@ -140,3 +140,4 @@ dmypy.json
 *.svip
 @*
 GPUCache/
+demo/
