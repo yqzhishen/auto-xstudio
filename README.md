@@ -25,7 +25,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 
 
 
-## 使用方法  |  Usage
+## 使用方法  |  How to Use
 
 发行版中包含若干个 demo，安装好所需依赖后即可运行 main.py 查看效果。
 
