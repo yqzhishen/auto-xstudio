@@ -19,6 +19,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 - 批量导出若干份工程
 - 导出一个工程的若干版本
 - 批量编辑并另存为工程
+- **工程在线试听**（欢迎网站站长合作！）
 
 欢迎加入仓库或提交 pull requests。若发现 bug 或有功能建议，欢迎在本仓库提交 issue，或[联系作者](https://space.bilibili.com/102844209)。
 
