@@ -244,6 +244,8 @@ def export_project(title: str = None, folder: str = None, format: str = 'mp3', s
     setting_window = auto.WindowControl(searchDepth=2, Name='导出设置')
     if title:
         setting_window.EditControl(searchDepth=1, AutomationId='FileNameTbx').GetValuePattern().SetValue(title)
+    else:
+        title = setting_window.EditControl(searchDepth=1, AutomationId='FileNameTbx').GetValuePattern().Value
     if folder:
         logger.warning('当前尚不支持指定导出文件夹路径。')
         setting_window.EditControl(searchDepth=1, AutomationId='DestTbx').SendKeys(folder, interval=0.05)
