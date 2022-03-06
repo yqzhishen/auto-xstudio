@@ -133,7 +133,7 @@ dmypy.json
 
 # Others
 /automation.py
-/test.py
+test.py
 *.wav
 *.mp3
 *.mid

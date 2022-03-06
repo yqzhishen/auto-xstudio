@@ -1,4 +1,9 @@
-from core import *
+import os
+import sys
+
+sys.path.append('core')
+
+from core import engine, projects
 
 
 if __name__ == '__main__':
@@ -10,12 +15,12 @@ if __name__ == '__main__':
             filelist.append(name)
     num = len(filelist)
     if num > 0:
-        start_xstudio(os.path.join(path, filelist[0]))
-        export_project(format='wav', samplerate=48000)
+        engine.start_xstudio(os.path.join(path, filelist[0]))
+        projects.export_project(format='wav', samplerate=48000)
         if num > 1:
-            open_project(filename=filelist[1], folder=path)
-            export_project(format='wav', samplerate=48000)
+            projects.open_project(filename=filelist[1], folder=path)
+            projects.export_project(format='wav', samplerate=48000)
             for file in filelist[2:]:
-                open_project(filename=file)
-                export_project(format='wav', samplerate=48000)
-        quit_xstudio()
+                projects.open_project(filename=file)
+                projects.export_project(format='wav', samplerate=48000)
+        engine.quit_xstudio()
