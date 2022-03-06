@@ -1,7 +1,7 @@
 import uiautomation as auto
 
 import log
-import mouse
+import keys
 import singers
 
 logger = log.logger
@@ -54,10 +54,10 @@ class Track:
 
     def set_muted(self, muted: bool):
         if muted and not self.is_muted():
-            mouse.scroll_inside(target=self.mute_button, bound=self.scroll_bound)
+            keys.scroll_wheel_inside(target=self.mute_button, bound=self.scroll_bound)
             self.mute_button.Click(simulateMove=False)
         elif not muted and self.is_muted():
-            mouse.scroll_inside(target=self.unmute_button, bound=self.scroll_bound)
+            keys.scroll_wheel_inside(target=self.unmute_button, bound=self.scroll_bound)
             self.unmute_button.Click(simulateMove=False)
         if muted:
             logger.info('静音轨道 %d。' % self.index)
@@ -66,10 +66,10 @@ class Track:
 
     def set_solo(self, solo: bool):
         if solo and not self.is_solo():
-            mouse.scroll_inside(target=self.solo_button, bound=self.scroll_bound)
+            keys.scroll_wheel_inside(target=self.solo_button, bound=self.scroll_bound)
             self.solo_button.Click(simulateMove=False)
         elif not solo and self.is_solo():
-            mouse.scroll_inside(target=self.notsolo_button, bound=self.scroll_bound)
+            keys.scroll_wheel_inside(target=self.notsolo_button, bound=self.scroll_bound)
             self.notsolo_button.Click(simulateMove=False)
         if solo:
             logger.info('独奏轨道 %d。' % self.index)
@@ -87,7 +87,7 @@ class Track:
         if self.is_instrumental():
             logger.error('指定的轨道不是演唱轨。')
             exit(1)
-        mouse.scroll_inside(target=self.switch_button, bound=self.scroll_bound)
+        keys.scroll_wheel_inside(target=self.switch_button, bound=self.scroll_bound)
         self.switch_button.DoubleClick(simulateMove=False)
         singers.choose_singer(name=singer)
         logger.info('为轨道 %d 切换歌手：%s。' % (self.index, singer))

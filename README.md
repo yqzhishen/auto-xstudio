@@ -32,7 +32,7 @@ X Studio · 歌手 UI 自动化  |  UI Automation for X Studio Singer
 - Windows 7 及以上操作系统
 - X Studio · 歌手 2.0.0 及以上版本
 - Python 3（除 3.7.6 和 3.8.1 外）
-- 第三方模块：pywin32, comtypes, typing, uiautomation, colorlog
+- 第三方模块：comtypes, typing, uiautomation, colorlog
 
 
 
@@ -77,6 +77,10 @@ UI 自动化执行的成功与否受到系统流畅度等客观因素影响。�
 > - 支持静音、取消静音、独奏、取消独奏
 > - 调整项目结构，优化部分代码
 > - Demo - 分轨导出一份工程文件
+
+#### 1.3.1 (2022.03.06)
+
+> - 解除了对第三方库 pywin32 的依赖
 
 
 

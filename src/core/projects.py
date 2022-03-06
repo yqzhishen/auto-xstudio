@@ -2,7 +2,7 @@ import os
 
 import uiautomation as auto
 
-import keybd
+import keys
 import log
 import verify
 import singers
@@ -15,9 +15,7 @@ def new_project(singer: str = None):
     新建工程。X Studio 必须已处于启动状态。
     :param singer: 可指定新工程的初始歌手
     """
-    keybd.key_down(17)
-    keybd.key_press(78)
-    keybd.key_up(17)
+    keys.press_key_combination(auto.Keys.VK_CONTROL, auto.Keys.VK_N)
     confirm_window = auto.WindowControl(searchDepth=1, Name='X Studio')
     if confirm_window.Exists(maxSearchSeconds=1):
         confirm_window.ButtonControl(searchDepth=1, AutomationId='NoBtn').Click(simulateMove=False)
@@ -46,16 +44,14 @@ def open_project(filename: str, folder: str = None):
     if not filename.endswith('.svip'):
         logger.error('不是一个可打开的 X Studio 工程 (.svip) 文件。')
         exit(1)
-    keybd.key_down(17)
-    keybd.key_press(79)
-    keybd.key_up(17)
+    keys.press_key_combination(auto.Keys.VK_CONTROL, auto.Keys.VK_O)
     confirm_window = auto.WindowControl(searchDepth=1, Name='X Studio')
     if confirm_window.Exists(maxSearchSeconds=1):
         confirm_window.ButtonControl(searchDepth=1, AutomationId='NoBtn').Click(simulateMove=False)
     main_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*')
     open_window = main_window.WindowControl(searchDepth=1, Name='打开文件')
     open_window.EditControl(searchDepth=3, Name='文件名(N):').GetValuePattern().SetValue(project)
-    open_window.ButtonControl(searchDepth=1, Name='打开(O)').Click(simulateMove=False)
+    auto.PressKey(auto.Keys.VK_ENTER, waitTime=0.1)
     warning_window = open_window.WindowControl(searchDepth=1, ClassName='#32770')
     if warning_window.Exists(maxSearchSeconds=1):
         warning = warning_window.TextControl(searchDepth=2).Name
@@ -139,20 +135,14 @@ def save_project(filename: str = None, folder: str = None):
             os.makedirs(folder)
         folder = os.path.abspath(folder.replace('/', '\\'))
     if not filename:
-        keybd.key_down(17)
-        keybd.key_press(83)
-        keybd.key_up(17)
+        keys.press_key_combination(auto.Keys.VK_CONTROL, auto.Keys.VK_S)
         logger.info('保存工程。')
     else:
         if folder:
             project = os.path.join(folder, filename)
         else:
             project = filename
-        keybd.key_down(17)
-        keybd.key_down(16)
-        keybd.key_press(83)
-        keybd.key_up(16)
-        keybd.key_up(17)
+        keys.press_key_combination(auto.Keys.VK_CONTROL, auto.Keys.VK_SHIFT, auto.Keys.VK_S)
         save_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*').WindowControl(searchDepth=1, Name='另存为')
         save_window.EditControl(searchDepth=6, Name='文件名:').GetValuePattern().SetValue(project)
         save_window.ButtonControl(searchDepth=1, Name='保存(S)').Click(simulateMove=False)

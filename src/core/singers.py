@@ -1,9 +1,6 @@
-import time
-
 import uiautomation as auto
 
 import log
-import mouse
 
 logger = log.logger
 
@@ -20,17 +17,16 @@ def choose_singer(name: str):
     while True:
         singer_text = browser_pane.TextControl(searchDepth=14, Name=name)
         bottom_text = browser_pane.TextControl(searchDepth=14, Name='已经到底了')
-        if singer_text.Exists(maxSearchSeconds=0.5) and 0 < singer_text.BoundingRectangle.bottom < bottom:
+        if singer_text.Exists(maxSearchSeconds=0.1) and 0 < singer_text.BoundingRectangle.bottom < bottom:
             singer_text.Click(simulateMove=False)
             break
-        elif bottom_text.Exists(maxSearchSeconds=0.5) and bottom_text.BoundingRectangle.bottom > 0:
+        elif bottom_text.Exists(maxSearchSeconds=0.1) and bottom_text.BoundingRectangle.bottom > 0:
             singer_market.ButtonControl(searchDepth=1, AutomationId='btnClose').Click(simulateMove=False)
             logger.error('指定的歌手“%s”不存在。' % name)
             exit(1)
         else:
             browser_pane.MoveCursorToMyCenter(simulateMove=False)
-            mouse.move_wheel(-1500)
-            time.sleep(1)
+            auto.WheelDown(wheelTimes=2, waitTime=1)
     if singer_market.ButtonControl(searchDepth=17, Name='待解锁').Exists(maxSearchSeconds=0.5):
         singer_market.ImageControl(Depth=17).Click(simulateMove=False)
         logger.error('指定的歌手“%s”未解锁。' % name)
