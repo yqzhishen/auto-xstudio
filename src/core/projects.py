@@ -2,6 +2,7 @@ import os
 
 import uiautomation as auto
 
+from exception import AutoXStudioException
 import keys
 import log
 import verify
@@ -38,12 +39,12 @@ def open_project(filename: str, folder: str = None):
         project = os.path.abspath(os.path.join(folder, filename))
         if not os.path.exists(project):
             logger.error('工程文件不存在。')
-            exit(1)
+            raise AutoXStudioException()
     else:
         project = filename
     if not filename.endswith('.svip'):
         logger.error('不是一个可打开的 X Studio 工程 (.svip) 文件。')
-        exit(1)
+        raise AutoXStudioException()
     keys.press_key_combination(auto.Keys.VK_CONTROL, auto.Keys.VK_O)
     confirm_window = auto.WindowControl(searchDepth=1, Name='X Studio')
     if confirm_window.Exists(maxSearchSeconds=1):
@@ -58,7 +59,7 @@ def open_project(filename: str, folder: str = None):
         warning_window.ButtonControl(searchDepth=2, Name='确定').Click(simulateMove=False)
         open_window.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
         logger.error(warning.replace('\r\n', ' ').replace('。 ', '。'))
-        exit(1)
+        raise AutoXStudioException()
     verify.verify_opening(main_window)
     logger.info('打开工程：%s。' % project)
 
@@ -73,12 +74,12 @@ def export_project(title: str = None, folder: str = None, format: str = 'mp3', s
     """
     if format not in ['mp3', 'wav', 'midi']:
         logger.error('只能保存为 mp3, wav 或 midi 格式。')
-        exit(1)
+        raise AutoXStudioException()
     if format == 'midi':
         samplerate = None
     elif samplerate != 48000 and samplerate != 44100:
         logger.error('采样率只能为 48000 或 44100。')
-        exit(1)
+        raise AutoXStudioException()
     if folder and not os.path.exists(folder):
         folder = folder.replace('/', '\\')
         os.makedirs(folder)
@@ -111,12 +112,12 @@ def export_project(title: str = None, folder: str = None, format: str = 'mp3', s
             message = message_window.TextControl(searchDepth=1, ClassName='Static').Name
             message_window.ButtonControl(searchDepth=1, Name='确定').Click(simulateMove=False)
             logger.error(message + '。')
-            exit(1)
+            raise AutoXStudioException()
         if label.Name == '导出成功':
             break
         elif label.Name.startswith('导出失败'):
             logger.error('导出失败，请稍后再试。')
-            exit(1)
+            raise AutoXStudioException()
     export_window.ButtonControl(searchDepth=1, AutomationId='okBtn').Click(simulateMove=False)
     logger.info('导出工程：%s, 格式 %s, 采样率 %d Hz。' % (title, format, samplerate))
 
@@ -130,13 +131,18 @@ def save_project(filename: str = None, folder: str = None):
     if folder:
         if not filename:
             logger.error('另存为工程时必须指定文件名。')
-            exit(1)
+            raise AutoXStudioException()
         if not os.path.exists(folder):
             os.makedirs(folder)
         folder = os.path.abspath(folder.replace('/', '\\'))
     if not filename:
         keys.press_key_combination(auto.Keys.VK_CONTROL, auto.Keys.VK_S)
-        logger.info('保存工程。')
+        save_window = auto.WindowControl(Depth=2, Name='另存为')
+        if save_window.Exists(maxSearchSeconds=0.5):
+            save_window.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
+            logger.warning('当前工程从未保存过，请指定另存为路径后再试。')
+        else:
+            logger.info('保存工程。')
     else:
         if folder:
             project = os.path.join(folder, filename)
@@ -155,5 +161,5 @@ def save_project(filename: str = None, folder: str = None):
                 confirm_window.ButtonControl(searchDepth=2, Name='确定').Click(simulateMove=False)
                 save_window.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
                 logger.error(warning.replace('\r\n', ' ').replace('。 ', '。'))
-                exit(1)
+                raise AutoXStudioException()
         logger.info('另存为工程：%s。' % project)

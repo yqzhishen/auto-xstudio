@@ -1,0 +1,2 @@
+class AutoXStudioException(Exception):
+    pass

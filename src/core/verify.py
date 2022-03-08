@@ -1,5 +1,6 @@
 import uiautomation as auto
 
+from exception import AutoXStudioException
 import log
 
 logger = log.logger
@@ -14,7 +15,7 @@ def verify_startup():
         warning = warning_window.TextControl(searchDepth=1, AutomationId='Tbx').Name
         warning_window.ButtonControl(searchDepth=1, AutomationId='OkBtn').Click(simulateMove=False)
         logger.error(warning)
-        exit(1)
+        raise AutoXStudioException()
 
 
 def verify_opening(base):
@@ -33,13 +34,13 @@ def verify_opening(base):
             warning_window.ButtonControl(searchDepth=2, Name='确定').Click(simulateMove=False)
             base.ButtonControl(searchDepth=1, Name='取消').Click(simulateMove=False)
             logger.error(warning)
-            exit(1)
+            raise AutoXStudioException()
         else:
             warning_window.ButtonControl(searchDepth=1, Name='确定').Click(simulateMove=False)
             base.WindowControl(searchDepth=1, Name='X Studio').ButtonControl(searchDepth=1, AutomationId='OkBtn').Click(simulateMove=False)
             base.WindowControl(searchDepth=1, Name='X Studio').ButtonControl(searchDepth=1, AutomationId='btnClose').Click(simulateMove=False)
             logger.error(warning)
-            exit(1)
+            raise AutoXStudioException()
 
 
 def verify_updates():

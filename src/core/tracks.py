@@ -1,5 +1,6 @@
 import uiautomation as auto
 
+from exception import AutoXStudioException
 import log
 import keys
 import singers
@@ -29,7 +30,7 @@ class Track:
     def __init__(self, index: int):
         if index < 1:
             logger.error('轨道编号最小为 1。')
-            exit(1)
+            raise AutoXStudioException()
         self.index = index
         self.track_window = auto.WindowControl(searchDepth=1, RegexName='X Studio .*').CustomControl(searchDepth=1, ClassName='TrackWin')
         self.scroll_bound = self.track_window.PaneControl(searchDepth=1, ClassName='ScrollViewer')
@@ -83,10 +84,10 @@ class Track:
         """
         if not self.exists():
             logger.error('未找到对应序号的轨道。')
-            exit(1)
+            raise AutoXStudioException()
         if self.is_instrumental():
             logger.error('指定的轨道不是演唱轨。')
-            exit(1)
+            raise AutoXStudioException()
         keys.scroll_wheel_inside(target=self.switch_button, bound=self.scroll_bound)
         self.switch_button.DoubleClick(simulateMove=False)
         singers.choose_singer(name=singer)

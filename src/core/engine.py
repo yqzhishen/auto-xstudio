@@ -3,6 +3,7 @@ import winreg
 
 import uiautomation as auto
 
+from exception import AutoXStudioException
 import log
 import singers
 import verify
@@ -31,19 +32,19 @@ def start_xstudio(engine: str = None, project: str = None, singer: str = '陈水
         engine = os.path.abspath(engine)
         if not os.path.exists(engine):
             logger.error('指定的主程序路径不存在。')
-            exit(1)
+            raise AutoXStudioException()
         if not os.path.isfile(engine) or not engine.endswith('.exe'):
             logger.error('指定的主程序不是合法的可执行 (.exe) 文件。')
-            exit(1)
+            raise AutoXStudioException()
         logger.info('指定的主程序：%s。' % engine)
     if project:
         project = os.path.abspath(project)
         if not os.path.exists(project):
             logger.error('工程文件不存在。')
-            exit(1)
+            raise AutoXStudioException()
         if not os.path.isfile(project) or not project.endswith('.svip'):
             logger.error('不是合法的 X Studio 工程 (.svip) 文件。')
-            exit(1)
+            raise AutoXStudioException()
         if engine:
             os.popen(f'"{engine}" "{project}"')
         else:

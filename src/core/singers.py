@@ -1,5 +1,6 @@
 import uiautomation as auto
 
+from exception import AutoXStudioException
 import log
 
 logger = log.logger
@@ -23,12 +24,12 @@ def choose_singer(name: str):
         elif bottom_text.Exists(maxSearchSeconds=0.1) and bottom_text.BoundingRectangle.bottom > 0:
             singer_market.ButtonControl(searchDepth=1, AutomationId='btnClose').Click(simulateMove=False)
             logger.error('指定的歌手“%s”不存在。' % name)
-            exit(1)
+            raise AutoXStudioException()
         else:
             browser_pane.MoveCursorToMyCenter(simulateMove=False)
             auto.WheelDown(wheelTimes=2, waitTime=1)
     if singer_market.ButtonControl(searchDepth=17, Name='待解锁').Exists(maxSearchSeconds=0.5):
         singer_market.ImageControl(Depth=17).Click(simulateMove=False)
         logger.error('指定的歌手“%s”未解锁。' % name)
-        exit(1)
+        raise AutoXStudioException()
     singer_market.ButtonControl(searchDepth=17, Name='选中').Click(simulateMove=False)
